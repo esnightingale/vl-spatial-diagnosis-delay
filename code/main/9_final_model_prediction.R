@@ -185,10 +185,9 @@ ul <- fit.pred$summary.fitted.values[index.p, "0.975quant"]
 
 pred <- data.frame(x = coop[,1], y = coop[,2], Mean = m, Lower = ll, Upper = ul, iqr = ul - ll) 
 
-# dat_in_poly <- sf::st_join(dat, blockmap, join = st_within)
-# incl <- which(blockmap$OBJECTID %in% dat_in_poly$OBJECTID)
-# blkfill <- rep(NA, nrow(blockmap))
-# blkfill[-incl] <- "white"
+# no_inc <- by_block$OBJECTID[which(is.na(by_block$inc))]
+# fillblank <- rep(NA, nrow(blockmap))
+# fillblank[which(blockmap$OBJECTID %in% no_inc)] <- "white"
 
 by_block %>% 
   dplyr::group_by(district) %>% 
@@ -209,12 +208,10 @@ ggplot() +
         legend.position = c(0.9, 0.85)) +
   scale_alpha_continuous(trans = "log2") +
   guides(alpha = "none") +
-  # geom_sf(data = dat, pch = "+", col = "white", alpha = 0.5) +
-  labs(#title = "Predicted mean of days fever prior to diagnosis", 
-       x = "", y = "", fill = "Delay (days)") -> pred_final
+  labs(x = "", y = "", fill = "Delay (days)") -> pred_final
 
 pred_final
-ggsave(here::here(figdir,"pred_final_dist.png"), pred_final, height = 6, width = 8, units = "in")
+ggsave(here::here(figdir,"pred_final.png"), pred_final, height = 6, width = 8, units = "in")
 
 ggplot() +
   geom_tile(data = pred, aes(x = x, y = y, fill = iqr/Mean)) +
@@ -222,33 +219,33 @@ ggplot() +
   scale_fill_viridis_c(option = "viridis", direction = -1, end = 0.9) +
   theme(axis.text = element_blank(), panel.grid = element_blank(),
         legend.position = c(0.9, 0.85)) +
-  # geom_sf(data = dat, pch = "+", col = "white", alpha = 0.5) +
-  labs(#title = "Predicted mean of days fever prior to diagnosis", 
-    x = "", y = "", fill = "(Q97.5 - Q2.5)/Mean") 
+  labs(x = "", y = "", fill = "(Q97.5 - Q2.5)/Mean") 
 
 ggsave(here::here(figdir,"pred_QR_mean.png"), height = 6, width = 8, units = "in")
 
 #------------------------------------------------------------------------------#
 # Exceedance probabilities
 
+cutoff <- 0.5
+
 # Extract fitted marginals
 # Calculate probability of exceeding 30 days from this marginal distribution
 pred$excprob <- sapply(fit.pred$marginals.fitted.values[index.p],
                        FUN = function(marg){1 - inla.pmarginal(q = 30, marginal = marg)})
 pred <- mutate(pred, 
-               excprob_hi = case_when(excprob > 0.5 ~ "greater than 0.5",
-                                     excprob <= 0.5 ~ "less/equal to 0.5"),
-               excprob_strength = abs(excprob - 0.5))
+               excprob_hi = case_when(excprob > cutoff ~ paste0("greater than ", cutoff),
+                                      excprob <= cutoff ~ paste0("less/equal to ", cutoff)),
+               excprob_strength = abs(excprob - cutoff))
 
 ggplot() +
   geom_tile(data = pred, aes(x = x, y = y, fill = excprob)) +
   geom_sf(data = blockmap, fill = fillblank) +
   scale_fill_viridis_c(direction = -1, option = "cividis") +
   labs(#title = "Predicted probability of delay exceeding 30 days",
-       x = "", y = "", fill = "P(delay > 30)") +
+    x = "", y = "", fill = "P(delay > 30)") +
   theme(axis.text = element_blank(), panel.grid = element_blank(),
-        legend.position = "bottom" #c(0.9, 0.85) #
-        ) -> map_exc
+        legend.position = c(0.9, 0.85)
+  ) -> map_exc
 map_exc
 
 ggsave(here::here(figdir,"excprob30.png"), map_exc, height = 6, width = 8, units = "in")
@@ -256,20 +253,24 @@ ggsave(here::here(figdir,"excprob30.png"), map_exc, height = 6, width = 8, units
 ggplot() +
   geom_tile(data = pred, aes(x = x, y = y, fill = excprob_hi, alpha = excprob_strength)) +
   geom_sf(data = blockmap, fill = fillblank) +
-  scale_fill_viridis_d(option = "cividis") +
-  # scale_fill_viridis_d(option = "viridis", begin = 0, end = 0.9) + 
-  labs(#title = "Predicted probability of delay exceeding 30 days",
-       x = "", y = "", fill = "") + #"Probability of\ndelay > 30 days"
+  scale_fill_viridis_d(option = "cividis") + 
+  labs(x = "", y = "", fill = "") +
   guides(alpha = "none") +
   theme(axis.text = element_blank(), panel.grid = element_blank(),
-        legend.position = c(0.9, 0.85) #"bottom"
-        ) -> map_exc2
+        legend.position = c(0.9, 0.85)
+  ) -> map_exc2
 map_exc2
 
 ggsave(here::here(figdir,"excprob30_final.png"), map_exc2, height = 6, width = 8, units = "in")
 
+# With cutoff = 0.75:
+# ggsave(here::here(figdir,"excprob30_supp.png"), map_exc2, height = 6, width = 8, units = "in")
+
 # map_exc + map_exc2
 # ggsave(here::here(figdir,"excprob30_final_combined.png"), height = 7, width = 14, units = "in")
+
+#------------------------------------------------------------------------------#
+# Excursion set
 
 excursions30 <- excursions.inla(
   fit.pred,
@@ -487,147 +488,3 @@ ggplot(by_endm, aes(block_endm_2017, diff_delay_acd,
 
 ################################################################################
 ################################################################################
-
-
-# pred2 %>%
-#   ggplot() +
-#   geom_point(aes(fitted, pred, col = detection)) +
-#   geom_abline(lty = "dashed") +
-#   scale_fill_viridis_d(option = "plasma") +
-#   labs(x = "Observed delay", y = "Predicted - no ACD")
-# ggsave(here::here(figdir, "obsvpred_noacd.png"), height = 6, width = 8, units = "in")
-# 
-# pred2 %>%
-#   ggplot() +
-#   geom_point(aes(fitted, pred - delay, col = detection)) +
-#   geom_hline(yintercept = 0, lty = "dashed") +
-#   scale_fill_viridis_d(option = "plasma") +
-#   labs(x = "Observed delay", y = "Predicted increase with no ACD")
-# ggsave(here::here(figdir, "predchng_noacd.png"), height = 6, width = 8, units = "in")
-# 
-# pred2 %>% 
-#   dplyr::rename(Fitted = fitted, 
-#                 `Predicted - No ACD` = pred) %>%
-#   tidyr::pivot_longer(c("Fitted","Predicted - No ACD")) %>% 
-#   ggplot(aes(x = value, fill = name)) +
-#   geom_histogram(position = "identity", alpha = 0.3, bins = 50) +
-#   labs(x = "Delay (days)", y = "Count", fill = "") +
-#   theme(legend.position = c(0.8,0.4))
-# ggsave(here::here(figdir, "fit_vs_noacd_hist.png"), height = 4, width = 5, units = "in", dpi = 350)
-# 
-# summary(pred2$fitted)
-# # Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-# # 2.309  11.845  16.798  31.523  43.970 493.345 
-# summary(pred2$pred)
-# # Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-# # 2.654  12.276  20.863  34.343  45.384 630.491 
-# 
-# pred2 %>% filter(detection == "ACD") %>% pull(fitted) %>% summary()
-# # Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-# # 2.309   9.635  16.425  25.291  30.540 493.345
-# pred2 %>% filter(detection == "ACD") %>% pull(pred) %>% summary()
-# # Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-# # 2.95   12.31   20.99   32.32   39.03  630.49 
-# 
-# summary(pred2$pred - pred2$fitted)
-# # Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
-# # -0.00025   0.00000   0.00001   2.81962   4.23487 137.14586 
-# 
-# pred2 %>%
-#   pivot_longer(c("fitted","pred")) %>% 
-#   mutate(gt30 = (value > 30)) %>% 
-#   group_by(name) %>% 
-#   summarise(p_gt30 = mean(gt30))
-# # name   p_gt30
-# # 1 fitted  0.338
-# # 2 pred    0.351
-# 
-# pred2 %>%
-#   filter(detection == "ACD") %>%
-# ggplot() +
-#   geom_histogram(aes(x = (pred - delay)*100/delay)) + 
-#   labs(x = "% change from observed")
-# ggsave(here::here(figdir, "predvsobs_noacd_hist.png"), height = 6, width = 8, units = "in")
-# 
-# pred2 %>% 
-#   filter(detection == "ACD") %>%
-# ggplot() +
-#   geom_sf(data = boundary, fill = NA) +
-#   geom_point(aes(x = x, y = y, col = (pred - delay)*100/delay), alpha = 0.5) +
-#   theme(axis.text = element_blank(), panel.grid = element_blank(),
-#         legend.position = c(0.9, 0.85)) +
-#   scale_color_viridis_c(option = "viridis", direction = -1, end = 0.9, trans = "identity") +
-#   labs(title = "Predicted change in delay with no ACD", 
-#        x = "", y = "", col = "% Change") 
-# ggsave(here::here(figdir, "predvsobs_noacd_map.png"), height = 6, width = 8, units = "in")
-# pred3 %>%
-#   ggplot() +
-#   geom_point(aes(delay, pred, col = detection)) +
-#   geom_abline(lty = "dashed") +
-#   scale_fill_viridis_d(option = "plasma") +
-#   labs(x = "Observed delay", y = "Predicted - complete ACD")
-# ggsave(here::here(figdir, "obsvpred_fullacd.png"), height = 6, width = 8, units = "in")
-# 
-# pred3 %>%
-#   ggplot() +
-#   geom_point(aes(delay, pred - delay, col = detection)) +
-#   geom_hline(yintercept = 0, lty = "dashed") +
-#   scale_fill_viridis_d(option = "plasma") +
-#   labs(x = "Observed delay", y = "Predicted increase with complete ACD")
-# ggsave(here::here(figdir, "predchng_fullacd.png"), height = 6, width = 8, units = "in")
-# 
-# pred3 %>% 
-#   dplyr::rename(Fitted = fitted, 
-#                 `Predicted - Complete ACD` = pred) %>%
-#   tidyr::pivot_longer(c("Fitted","Predicted - Complete ACD")) %>% 
-#   ggplot(aes(x = value, fill = name)) +
-#   geom_histogram(position = "identity", alpha = 0.3, bins = 50) +
-#   labs(x = "Delay (days)", y = "Count", fill = "") +
-#   theme(legend.position = c(0.8,0.4))
-# ggsave(here::here(figdir, "fit_vs_fullacd_hist.png"), height = 4, width = 5, units = "in", dpi = 350)
-# 
-# summary(pred3$fitted)
-# # Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-# # 2.309  11.845  16.798  31.523  43.970 493.345 
-# summary(pred3$pred)
-# # Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-# # 2.079   9.613  16.325  26.890  35.545 493.345 
-# 
-# pred3 %>% filter(detection == "PCD") %>% pull(fitted) %>% summary()
-# # Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-# # 2.654  12.271  17.293  35.697  45.648 383.763 
-# pred3 %>% filter(detection == "PCD") %>% pull(pred) %>% summary()
-# # Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-# # 2.078   9.612  13.546  27.961  35.756 300.604
-# 
-# summary(pred3$pred - pred3$fitted)
-# # Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
-# # -83.15954  -5.69832  -1.76723  -4.63302   0.00000   0.00003
-# 
-# pred3 %>%
-#   pivot_longer(c("fitted","pred")) %>% 
-#   mutate(gt30 = (value > 30)) %>% 
-#   group_by(name) %>% 
-#   summarise(p_gt30 = mean(gt30))
-# # name   p_gt30
-# # 1 fitted  0.338
-# # 2 pred    0.293
-# 
-# pred3 %>%
-#   filter(detection == "PCD") %>%
-#   ggplot() +
-#   geom_histogram(aes(x = (pred - delay)*100/delay)) + 
-#   labs(x = "% change from observed")
-# ggsave(here::here(figdir, "predvsobs_fullacd_hist.png"), height = 6, width = 8, units = "in")
-# 
-# pred3 %>% 
-#   filter(detection == "PCD") %>%
-#   ggplot() +
-#   geom_sf(data = boundary, fill = NA) +
-#   geom_point(aes(x = x, y = y, col = (pred - fitted)*100/fitted), alpha = 0.5) +
-#   theme(axis.text = element_blank(), panel.grid = element_blank(),
-#         legend.position = c(0.9, 0.85)) +
-#   scale_color_viridis_c(option = "viridis", direction = -1, end = 0.9, trans = "identity") +
-#   labs(title = "Predicted change in delay with complete ACD", 
-#        x = "", y = "", col = "% Change") 
-# ggsave(here::here(figdir, "predchng_fullacd_map.png"), height = 6, width = 8, units = "in")

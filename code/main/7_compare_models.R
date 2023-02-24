@@ -85,11 +85,11 @@ fits$All$fit$summary.hyperpar
 #------------------------------------------------------------------------------#
 # Spatial correlation in fitted IID effects
 
-p_vgm_null <- plot_vgm(fits$Null$fit$summary.random$id$mean, dat, title = "Null model",ylim = c(0.5,1))
+p_vgm_null <- plot_vgm(fits$Null$fit$summary.random$id$mean, dat, title = "Non-spatial, no covariates [Baseline]",ylim = c(0.5,1))
 
-p_vgm_select <- plot_vgm(fits$`All (IID only)`$fit$summary.random$id$mean, dat, title = "Selected covariates, non-spatial model",ylim = c(0.5,1))
+p_vgm_select <- plot_vgm(fits$`All (IID only)`$fit$summary.random$id$mean, dat, title = "Non-spatial, selected covariates",ylim = c(0.5,1))
 
-p_vgm_final <- plot_vgm(fits$All$fit$summary.random$id$mean, dat, title = "Selected covariates, spatial model",ylim = c(0.5,1))
+p_vgm_final <- plot_vgm(fits$All$fit$summary.random$id$mean, dat, title = "Spatial, selected covariates",ylim = c(0.5,1))
 
 png(here::here(figdir, "vgms_null_select_final.png"), height = 500, width = 1500)
 gridExtra::grid.arrange(p_vgm_null, p_vgm_select, p_vgm_final, nrow = 1)
@@ -144,45 +144,33 @@ c("Intercept",
   # "Travel time*rainy season"
   ) -> axis.labs
 
-png(here::here(figdir, "fitted_effects_main.png"), height = 6, width = 8, unit = "in", res = 320)
+png(here::here(figdir, "fitted_effects_supp1.png"), height = 6, width = 8, unit = "in", res = 320)
 Efxplot(lapply(fits[c(10, 11, 9)], function(x) x$fit),
-        ModelNames = c("Fixed effects only","Non-spatial random effects","Spatial random effects"),
+        ModelNames = c("Fixed effects only", "Non-spatial, all covariates","Spatial, all covariates"), 
         Intercept = FALSE,
         exp = TRUE,
         # VarOrder= rev(order),
         VarNames = rev(axis.labs)) +
   scale_colour_viridis_d(option = "plasma", begin = 0.2, end = 0.8, direction = 1) +
   theme(legend.position = c(0.75,0.2),
-        legend.title = element_blank(),
-        legend.box.background = element_rect(color="white", size=2))
+        # legend.title = element_blank(),
+        legend.box.background = element_rect(color="white", size=2)) +
+  labs(x = NULL, y = "Risk Ratio")
 # theme(legend.position = c(0.8,0.2))
 dev.off()
 
-
-png(here::here(figdir, "fitted_effects_supp1.png"), height = 6, width = 8, unit = "in", res = 320)
-Efxplot(lapply(fits[3:9], function(x) x$fit),
-                   ModelNames = names(fits)[3:9],
-                   Intercept = FALSE,
-                   exp = TRUE,
-                   VarNames = rev(axis.labs)) +
-  scale_colour_viridis_d(option = "plasma", end = 0.8, direction = -1) +
-  theme(legend.position = c(0.8,0.25),
-        legend.title = element_blank(),
-        legend.box.background = element_rect(color="white", size=2))
-dev.off()
-
 png(here::here(figdir, "fitted_effects_supp2.png"), height = 6, width = 8, unit = "in", res = 320)
-Efxplot(lapply(fits[c(11,9,13)], function(x) x$fit),
-                   ModelNames = c("Non-spatial (IID)", "Spatial (IID+SPDE)","Spatial (Binomial likelihood)"),
-                   Intercept = FALSE,
-                   exp = TRUE,
-                   # VarOrder= rev(order),
-                   VarNames = rev(axis.labs)) +
+Efxplot(lapply(fits[c(9,13)], function(x) x$fit),
+        ModelNames = c("Poisson likelihood (RR)","Binomial likelihood (OR)"),
+        Intercept = FALSE,
+        exp = TRUE,
+        # VarOrder= rev(order),
+        VarNames = rev(axis.labs)) +
   scale_colour_viridis_d(option = "plasma", begin = 0.2, end = 0.8, direction = 1) +
   theme(legend.position = c(0.75,0.2),
-        legend.title = element_blank(),
+        # legend.title = element_blank(),
         legend.box.background = element_rect(color="white", size=2))
-  # theme(legend.position = c(0.8,0.2))
+# theme(legend.position = c(0.8,0.2))
 dev.off()
 
 #------------------------------------------------------------------------------#
@@ -242,13 +230,6 @@ dev.off()
 png(here::here(figdir, "spde_only_fit_supp.png"), height = 1000, width = 1300, res = 350) 
 plot_spde_mean(spde.fits$`All (SPDE only)`$fit, "All (SPDE only)")
 dev.off()
-
-# pdf(here::here(figdir, "compare_spde_quants.pdf"), height = 7, width = 10) 
-# # purrr::imap(spde.fits, function(x, nm) plot_spde(x$fit, nm, stat = "mean", limit1 = c(-1,1), limit2 = c(0,0.5)))
-# purrr::imap(spde.fits, function(x, nm) plot_spde(x$fit, nm, stat = "quantile", limit1 = c(-1,1), limit2 = c(-1,1)))
-# dev.off()
-# 
-# plot_spde(spde.fits$All$fit, "All", stat = "quantile", limit1 = c(-1.5,1.5), limit2 = c(-1.5,1.5)) #limit1 = c(-1,1), limit2 = c(-1,1))
 
 # ---------------------------------------------------------------------------- #
 # Percent difference between each SPDE and baseline, over space
