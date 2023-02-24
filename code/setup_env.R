@@ -31,7 +31,7 @@ if (any(installed_packages == FALSE)) {
 # Load packages
 invisible(lapply(packages, library, character.only = TRUE))
 
-# ggmap::register_google(key = "AIzaSyDBz7TtWW69ZGDHmThLgSzEuVEXrEt8pEQ", write = TRUE)
+ggsave <- function(..., bg = 'white') ggplot2::ggsave(..., bg = bg)
 
 # Set default theme for plotting
 theme_set(theme_minimal())
