@@ -10,18 +10,6 @@ source(here::here("code","setup_env.R"))
 figdir <- "figures/fit/univariate"
 outdir <- "output/univariate"
 
-# covs_all <- list("age_s","sex1","comorb1","prv_txTRUE","caste4_r1",c("occ4_cat1",
-#               "occ4_cat2", "occ4_cat3"), "poss_acdTRUE",
-#              "block_endm_2017TRUE", "IRS_2017TRUE","inc_2017_gt0TRUE",
-#              "traveltime_s","traveltime_t_s", "rainTRUE")
-# #c("age_cat.12.25.","age_cat.25.42.","age_cat.42.95.") 
-# covs_pat1 <- list("age_s","sex1","comorb1","prv_txTRUE","caste4_r1","occ4_cat1",
-#                                                                    "occ4_cat2", "occ4_cat3") 
-# covs_pat <- c(covs_pat1, list("poss_acdTRUE"))
-# covs_aware <- list("block_endm_2017TRUE", "IRS_2017TRUE","inc_2017_gt0TRUE")
-# covs_accessD <- list("traveltime_s", "rainTRUE")
-# covs_accessT <- list("traveltime_t_s", "rainTRUE") 
-
 covs_all <- list("age_s","sex","comorb","prv_tx","caste4_r","occ4_cat", "poss_acd",
                  "block_endm_2017", "IRS_2017","inc_2017_gt0",
                  "traveltime_s","traveltime_t_s", "rain")
