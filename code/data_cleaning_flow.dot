@@ -1,0 +1,33 @@
+digraph data_cleaning {
+  
+  graph [layout = dot,
+         overlap = false,
+         fontsize = 5]
+  
+  # nodes #
+  node [shape = box,
+        fixedsize = true,
+        width = 2,
+        height = 1,
+        style = filled]        
+  
+  diagnosed [label = '5,030 diagnoses \n between \n Jan 2018 - July 2019', fillcolor = grey95]    
+  entry_error [label = '2 erroneous \n data entries', fillcolor = mistyrose] 
+  no_gps [label = '649 with no known \n GPS location', fillcolor = mistyrose]  
+  with_gps [label = '4,379 linked to \n a valid GPS location', fillcolor = grey95]
+  incomplete_data [label = '84 with missing \n covariate data', fillcolor = mistyrose]
+  complete_data [label = '4,295 with complete \n covariate data', fillcolor = grey95]
+  short_duration [label = '24 with fever duration \n < 14 days at diagnosis', fillcolor = mistyrose]
+  final [label = '4,271 observations for \n primary analysis', fillcolor = lightblue]
+
+  # edges #
+  diagnosed -> with_gps
+  with_gps -> complete_data
+  complete_data -> final
+  
+  diagnosed -> entry_error
+  diagnosed -> no_gps
+  with_gps -> incomplete_data
+  complete_data -> short_duration
+  
+}
