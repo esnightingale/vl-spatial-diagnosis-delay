@@ -40,7 +40,7 @@ fit.final <- readRDS(here::here(outdir, "fits_final.rds"))[["All"]]
 summary(fit.final$fit)
 
 # Fixed effects:
-#   mean    sd 0.025quant 0.5quant 0.975quant   mode kld
+#                       mean    sd 0.025quant 0.5quant 0.975quant   mode kld
 # Intercept            3.271 0.075      3.138    3.266      3.436  3.255   0
 # age_s                0.118 0.015      0.088    0.118      0.148  0.118   0
 # comorb1              0.244 0.080      0.087    0.244      0.402  0.244   0
