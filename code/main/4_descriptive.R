@@ -11,7 +11,10 @@ dat <- read_data() %>%
   dplyr::mutate(delay_cat5 = gtools::quantcut(delay, 5),
                 delay_cat3 = gtools::quantcut(delay, 3),
                 gt90 = (delay > 90),
-                gt60 = (delay > 60)) %>%
+                gt60 = (delay > 60),
+                gt30 = (delay > 30),
+                traveltime_cat = cut(traveltime, breaks = c(0,15,30,150), include.lowest = T),
+                traveltime_t_cat = cut(traveltime_t, breaks = c(0,15,30,150), include.lowest = T)) %>%
   arrange(delay)
 
 # Setup map context
@@ -332,7 +335,40 @@ plot(vg, model = vgfit, xlab = "Distance (km)")
 dev.off()
 
 # ---------------------------------------------------------------------------- #
-# Tabulate
+# Covariates
+
+dat %>% 
+  st_drop_geometry() %>% 
+  mutate(sex = (sex == 2),
+         comorb = (comorb == 1),
+         caste4_r = (caste4_r == 1),
+         unempl = (occ4_cat == 0)) %>% 
+  dplyr::select(delay, age, sex, comorb, caste4_r, unempl, poss_acd, 
+                inc_2017_gt0, IRS_2017, block_endm_2017,
+                traveltime, traveltime_t, rain) %>% 
+  rename(Delay = delay,
+         Female = sex,
+         Age = age,
+         `HIV positive` = comorb,
+         `Not working` = unempl,
+         `Marg. caste` = caste4_r, 
+         ACD = poss_acd,
+         `Incidence 2017 > 0` = inc_2017_gt0,
+         `IRS 2017` = IRS_2017,
+         `Block endemic 2017` = block_endm_2017,
+         `Travel time (diag)` = traveltime,
+         `Travel time (trt)` = traveltime_t,
+         Rain = rain) %>%
+  mutate(across(everything(), as.numeric)) %>% 
+  cor() -> cor_matrix
+
+png(here::here(figdir, "corr_plot.png"), height = 500, width = 600)
+cor_matrix %>% 
+  corrplot::corrplot(type = "lower", diag = F, method = "square") 
+dev.off()
+
+# ---------------------------------------------------------------------------- #
+# Tabulate by covariates
 
 make_tab <- function(dat, varname){
   
@@ -341,37 +377,41 @@ make_tab <- function(dat, varname){
     dplyr::group_by(Value) %>%
     dplyr::summarise(N = n(),
                      mean = round(mean(delay),1),
-                     ci = paste(round(mean + sd(delay)/sqrt(N) * qnorm(p = c(0.025, 0.975)),1), collapse = ","),
+                     sd = round(sd(delay),1),
                      med = median(delay),
                      iqr = paste(quantile(delay, p = c(0.25, 0.75)), collapse = ","),
-                     n_gt30 = sum(delay_gt30),
-                     p_gt30 = round(n_gt30/N,2)) %>%
-    dplyr::mutate(`Delay, mean [95% CI]` = paste0(mean, " [",ci,"]"),
+                     n_gt30 = sum(gt30),
+                     p_gt30 = 100*round(n_gt30/N,2)) %>%
+    dplyr::mutate(`Delay, mean (SD)` = paste0(mean, " (",sd,")"),
                   `Delay, median [IQR]` = paste0(med, " [",iqr,"]"),
                   `> 30 days, N (%)` = paste0(n_gt30, " (",p_gt30,")"),
                   Variable = varname) %>%
-    dplyr::select(Variable, Value, N, `Delay, mean [95% CI]`, `> 30 days, N (%)`) %>%
+    dplyr::select(Variable, Value, N,
+                  `Delay, mean (SD)`,
+                  `Delay, median [IQR]`,
+                  `> 30 days, N (%)`) %>%
     dplyr::arrange(Value) -> tab
   
   return(tab)
   
 }
 
-make_plot <- function(t) {
-  
-  t %>%
-    filter(Value != "NA") %>%
-    separate(`Delay, mean [95% CI]`, into = c("mean","ll","ul"), sep = "[\\[\\,\\]]", convert = TRUE) %>%
-    ggplot(aes(Value, mean, ymin = ll, ymax = ul)) +
-    geom_linerange() +
-    geom_point() +
-    geom_hline(yintercept = mean(dat.df$delay), col = "grey") +
-    labs(subtitle = unique(t$Variable), x = "", y =  "") %>%
-    return()
-  
-}
+# make_plot <- function(t) {
+#   
+#   t %>%
+#     filter(Value != "NA") %>%
+#     separate(`Delay, mean (SD)`, into = c("mean","sd"), sep = "[\\(\\\\)]", convert = TRUE) %>%
+#     ggplot(aes(Value, mean, ymin = mean - 2*sd, ymax = mean + 2*sd)) +
+#     geom_linerange() +
+#     geom_point() +
+#     geom_hline(yintercept = mean(dat.df$delay), col = "grey") +
+#     labs(subtitle = unique(t$Variable), x = "", y =  "") %>%
+#     return()
+#   
+# }
 
 dat %>%
+  sf::st_drop_geometry() %>% 
   dplyr::rename(Sex = sex,
                 Age = age_cat,
                 `Scheduled caste or tribe` = caste4_r,
@@ -382,12 +422,12 @@ dat %>%
                 `Block endemic in 2017` = block_endm_2017,
                 `Village IRS targeted in 2017` = IRS_2017,
                 `Village incidence > 0 in 2017` = inc_2017_gt0,
-                `Travel time to nearest diagnosis facility` = travel_time_cat,
-                `Travel time to nearest treatment facility` = travel_time_t_cat) -> dat.tab
+                `Travel time to nearest diagnosis facility` = traveltime_cat,
+                `Travel time to nearest treatment facility` = traveltime_t_cat) -> dat.tab
 
 # varlist <- list("sex","age_child", "marg_caste","hiv", "prv_tx_ka", "num_conslt_4","detection","block_endm_2017" ,"IRS_2017_1", "inc_2017_gt0", "travel_time_cat")
 varlist <- list("Sex","Age","Scheduled caste or tribe","Occupation","HIV status", 
-                "Previous VL/PKDL treatment","Number of prior consultations",
+                "Previous VL/PKDL treatment", #"Number of prior consultations",
                 "Detection","Block endemic in 2017",
                 "Village IRS targeted in 2017","Village incidence > 0 in 2017", 
                 "Travel time to nearest diagnosis facility",
@@ -395,16 +435,17 @@ varlist <- list("Sex","Age","Scheduled caste or tribe","Occupation","HIV status"
 
 tabs.list <- lapply(varlist, make_tab, dat = dat.tab)
 
-plots <- lapply(tabs.list, make_plot)
-
-png(here::here(figdir, "covariate_mean_ci_plot.png"), height = 10, width = 15, units = "in", res = 300)
-do.call("grid.arrange", plots)
-dev.off()
-
 tab <- bind_rows(lapply(tabs.list, function(t) mutate(t, Value = as.character(Value))))
 View(tab)
 
-write.csv(tab, here::here("output","table_descriptive.csv"), row.names = FALSE)
+write.csv(tab, here::here("output","tables","table_descriptive.csv"), row.names = FALSE)
+
+
+# plots <- lapply(tabs.list, make_plot)
+
+# png(here::here(figdir, "covariate_dotwhisker_plot.png"), height = 10, width = 15, units = "in", res = 300)
+# do.call("grid.arrange", plots)
+# dev.off()
 
 ################################################################################
 ################################################################################
