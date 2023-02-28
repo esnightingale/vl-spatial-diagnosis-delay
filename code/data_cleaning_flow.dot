@@ -13,12 +13,12 @@ digraph data_cleaning {
   
   diagnosed [label = '5,030 diagnoses \n between \n Jan 2018 - July 2019', fillcolor = grey95]    
   entry_error [label = '2 erroneous \n data entries', fillcolor = mistyrose] 
-  no_gps [label = '649 with no known \n GPS location', fillcolor = mistyrose]  
-  with_gps [label = '4,379 linked to \n a valid GPS location', fillcolor = grey95]
+  no_gps [label = '650 with no known \n GPS location', fillcolor = mistyrose]  
+  with_gps [label = '4,378 linked to \n a valid GPS location', fillcolor = grey95]
   incomplete_data [label = '84 with missing \n covariate data', fillcolor = mistyrose]
-  complete_data [label = '4,295 with complete \n covariate data', fillcolor = grey95]
+  complete_data [label = '4,294 with complete \n covariate data', fillcolor = grey95]
   short_duration [label = '24 with fever duration \n < 14 days at diagnosis', fillcolor = mistyrose]
-  final [label = '4,271 observations for \n primary analysis', fillcolor = lightblue]
+  final [label = '4,270 observations for \n primary analysis', fillcolor = lightblue]
 
   # edges #
   diagnosed -> with_gps
