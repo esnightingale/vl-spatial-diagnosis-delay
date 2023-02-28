@@ -39,24 +39,5 @@ print(paste(n_nonmiss - nrow(dat),"observations deleted due to negative delay"))
 
 saveRDS(dat, here::here("data/analysis","dat_nona.rds"))
 
-# ---------------------------------------------------------------------------- #
-# Split fitting and validation data
-
-# v.idx <- sample(1:nrow(dat), floor(nrow(dat)*val.size))
-# 
-# dat.fit <- dat[-v.idx,]
-# dat.val <- dat[v.idx,]
-# 
-# dat.fit.df <- st_drop_geometry(dat.fit)
-# dat.val.df <- st_drop_geometry(dat.val)
-# 
-# # Full dataset with outcome set to NA for validation points
-# dat.fit.val <- dat
-# dat.fit.val$days_fever[v.idx] <- NA
-# 
-# saveRDS(dat.fit, here::here("data/analysis","dat_fit.rds"))
-# saveRDS(dat.val, here::here("data/analysis","dat_val.rds"))
-# saveRDS(dat.fit.val, here::here("data/analysis","dat_fit_val.rds"))
-
 ################################################################################
 ################################################################################
