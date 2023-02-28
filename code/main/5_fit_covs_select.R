@@ -289,5 +289,97 @@ Efxplot(plyr::llply(fits.all, function(x) x$fit),
        caption = "Selected covariates from each domain are highlighted in bold.")
 dev.off()
 
+# ---------------------------------------------------------------------------- #
+# Estimated coefficients
+
+fits.all[[1]]$fit -> fit_age
+fits.all[[3]]$fit -> fit_hiv
+fits.all[[7]]$fit -> fit_acd
+
+fits.all[[8]]$fit -> fit_end
+fits.all[[10]]$fit -> fit_inc
+
+fits.all[[12]]$fit -> fit_trt
+
+fits.all[[14]]$fit -> fit_pat
+fits.all[[15]]$fit -> fit_awa
+fits.all[[17]]$fit -> fit_acc
+
+fits.all[[18]]$fit -> fit_sel
+
+lapply(list(fit_age, fit_hiv, fit_acd, 
+            fit_end, fit_inc, 
+            fit_trt,
+            fit_pat, fit_awa, fit_acc,
+            fit_sel), 
+       get_coeffs)
+
+# [[1]]
+# effect       mean     sd quant0.025 quant0.25 quant0.5 quant0.75 quant0.975
+#   1 (Intercept) 19.1  0.296       18.5      18.9     19.1      19.3       19.6 
+#   2 age_s        1.14 0.0178       1.11      1.13     1.14      1.15       1.18
+# 
+# [[2]]
+# effect       mean    sd quant0.025 quant0.25 quant0.5 quant0.75 quant0.975
+#   1 (Intercept) 18.7  0.298      18.1      18.5     18.7      18.9       19.3 
+#   2 comorb1      1.54 0.126       1.31      1.46     1.54      1.63       1.81
+# 
+# [[3]]
+# effect         mean     sd quant0.025 quant0.25 quant0.5 quant0.75 quant0.975
+#   1 (Intercept)  21.5   0.428      20.7      21.2     21.5      21.8       22.3  
+#   2 poss_acdTRUE  0.738 0.0233      0.693     0.722    0.738     0.754      0.785
+#
+# [[4]]
+# effect                mean     sd quant0.025 quant0.25 quant0.5 quant0.75 quant0.975
+#   1 (Intercept)         20.4   0.430      19.6      20.1     20.4      20.7       21.3  
+#   2 block_endm_2017TRUE  0.854 0.0267      0.803     0.835    0.853     0.872      0.907
+# 
+# [[5]]
+# effect             mean     sd quant0.025 quant0.25 quant0.5 quant0.75 quant0.975
+#   1 (Intercept)      20.7   0.480      19.8      20.4     20.7      21.0       21.7  
+#   2 inc_2017_gt0TRUE  0.855 0.0267      0.804     0.836    0.854     0.873      0.908
+# 
+# [[6]]
+# effect          mean     sd quant0.025 quant0.25 quant0.5 quant0.75 quant0.975
+#   1 (Intercept)    19.0  0.298      18.4       18.8     19.0      19.2       19.6 
+#   2 traveltime_t_s  1.02 0.0159      0.991      1.01     1.02      1.03       1.05
+# 
+# [[7]]
+# effect         mean     sd quant0.025 quant0.25 quant0.5 quant0.75 quant0.975
+#   1 (Intercept)  21.6   0.641      20.3      21.1     21.6      22.0       22.9  
+# 2 age_s         1.14  0.0187      1.10      1.12     1.14      1.15       1.17 
+# 3 sex1          0.947 0.0320      0.886     0.925    0.947     0.969      1.01 
+# 4 comorb1       1.37  0.113       1.16      1.29     1.36      1.44       1.60 
+# 5 prv_txTRUE    0.959 0.0527      0.859     0.922    0.957     0.993      1.07 
+# 6 caste4_r1     1.06  0.0349      0.995     1.04     1.06      1.09       1.13 
+# 7 occ4_cat1     0.982 0.0383      0.909     0.956    0.981     1.01       1.06 
+# 8 occ4_cat2     1.03  0.0681      0.901     0.981    1.03      1.07       1.17 
+# 9 occ4_cat3     0.992 0.0650      0.871     0.947    0.990     1.04       1.13 
+# 10 poss_acdTRUE  0.749 0.0238      0.703     0.732    0.748     0.764      0.796
+# 
+# [[8]]
+# effect                mean     sd quant0.025 quant0.25 quant0.5 quant0.75 quant0.975
+#   1 (Intercept)         21.7   0.722      20.3      21.2     21.7      22.2       23.1  
+# 2 block_endm_2017TRUE  0.885 0.0290      0.829     0.865    0.884     0.904      0.943
+# 3 IRS_2017TRUE         0.988 0.0409      0.910     0.959    0.987     1.01       1.07 
+# 4 inc_2017_gt0TRUE     0.890 0.0319      0.829     0.868    0.889     0.911      0.954
+# 
+# [[9]]
+# effect          mean     sd quant0.025 quant0.25 quant0.5 quant0.75 quant0.975
+#   1 (Intercept)    18.9  0.360      18.2       18.6     18.9      19.1       19.6 
+# 2 traveltime_t_s  1.02 0.0159      0.990      1.01     1.02      1.03       1.05
+# 3 rainTRUE        1.03 0.0342      0.961      1.00     1.03      1.05       1.09
+# 
+# [[10]]
+# effect                mean     sd quant0.025 quant0.25 quant0.5 quant0.75 quant0.975
+#   1 (Intercept)         23.6   0.659      22.3      23.1     23.6      24.0       24.9  
+# 2 age_s                1.13  0.0175      1.09      1.12     1.13      1.14       1.16 
+# 3 comorb1              1.28  0.104       1.08      1.20     1.27      1.34       1.49 
+# 4 poss_acdTRUE         0.748 0.0236      0.702     0.731    0.747     0.763      0.795
+# 5 block_endm_2017TRUE  0.860 0.0280      0.806     0.840    0.859     0.878      0.916
+# 6 inc_2017_gt0TRUE     0.937 0.0301      0.880     0.917    0.937     0.957      0.998
+# 7 traveltime_t_s       1.02  0.0159      0.993     1.01     1.02      1.03       1.06 
+
+
 ################################################################################
 ################################################################################
