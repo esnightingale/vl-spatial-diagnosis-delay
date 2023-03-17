@@ -21,7 +21,7 @@ library(collapse)
 packages <- c("here","tidyverse","lubridate", "magrittr","gridExtra","sf","spdep","rgdal",
               "spatstat","ggspatial","ggmap","patchwork","scales","here", "gstat", 
               "variosig", "biscale","INLA","inlabru", "inlatools", "excursions", "ggregplot","mapr",
-              "INLAutils","brinla","rlist") 
+              "INLAutils","brinla","rlist", "correlation","see") 
 
 # Check and install if necessary
 installed_packages <- packages %in% rownames(installed.packages())

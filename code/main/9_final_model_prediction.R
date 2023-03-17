@@ -205,7 +205,7 @@ ggplot() +
   geom_sf(data = blockmap, fill = fillblank) +
   scale_fill_viridis_c(option = "viridis", direction = -1, end = 0.9) +
   theme(axis.text = element_blank(), panel.grid = element_blank(),
-        legend.position = c(0.9, 0.85)) +
+        legend.position = c(0.85, 0.85)) +
   scale_alpha_continuous(trans = "log2") +
   guides(alpha = "none") +
   labs(x = "", y = "", fill = "Delay (days)") -> pred_final
@@ -244,7 +244,7 @@ ggplot() +
   labs(#title = "Predicted probability of delay exceeding 30 days",
     x = "", y = "", fill = "P(delay > 30)") +
   theme(axis.text = element_blank(), panel.grid = element_blank(),
-        legend.position = c(0.9, 0.85)
+        legend.position = c(0.85, 0.85)
   ) -> map_exc
 map_exc
 
@@ -254,10 +254,10 @@ ggplot() +
   geom_tile(data = pred, aes(x = x, y = y, fill = excprob_hi, alpha = excprob_strength)) +
   geom_sf(data = blockmap, fill = fillblank) +
   scale_fill_viridis_d(option = "cividis") + 
-  labs(x = "", y = "", fill = "") +
+  labs(x = "", y = "", fill = "Posterior probability\ndelay > 30 days") +
   guides(alpha = "none") +
   theme(axis.text = element_blank(), panel.grid = element_blank(),
-        legend.position = c(0.9, 0.85)
+        legend.position = c(0.85, 0.85)
   ) -> map_exc2
 map_exc2
 
@@ -268,6 +268,26 @@ ggsave(here::here(figdir,"excprob30_final.png"), map_exc2, height = 6, width = 8
 
 # map_exc + map_exc2
 # ggsave(here::here(figdir,"excprob30_final_combined.png"), height = 7, width = 14, units = "in")
+
+# Figure for publication:
+ggplot() +
+  geom_sf(data = by_block, aes(fill = inc)) +
+  scale_fill_viridis_c(option = "plasma", direction = 1, 
+                       na.value = "white",
+                       trans = "log10") + 
+  labs(x = "", y = "", fill = "Incidence\nper 10,000") +
+  guides(alpha = "none") +
+  theme(axis.text = element_blank(), panel.grid = element_blank(),
+        legend.position = c(0.85, 0.85)
+  ) -> map_obs
+map_obs
+
+pred_final + map_exc2 + map_obs -> maps_combined
+  # plot_annotation(tag_levels = "A")
+
+ggsave(here::here(figdir,"final_combined.png"),
+       maps_combined,
+       height = 6, width = 20, units = "in")
 
 #------------------------------------------------------------------------------#
 # Excursion set

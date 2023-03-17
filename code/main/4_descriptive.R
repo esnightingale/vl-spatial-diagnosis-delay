@@ -4,6 +4,8 @@
 ################################################################################
 ################################################################################
 
+source(here::here("code","setup_env.R"))
+
 figdir <- "figures/descriptive"
 
 # Load analysis data
@@ -359,10 +361,12 @@ dat %>%
          `Travel time (diag)` = traveltime,
          `Travel time (trt)` = traveltime_t,
          Rain = rain) %>%
-  mutate(across(everything(), as.numeric)) %>% 
-  cor() -> cor_matrix
+  # mutate(across(everything(), as.numeric)) %>% 
+  correlation::correlation(include_factors = T, method = "auto") %>% 
+  as.matrix() %>% 
+  correlation::cor_sort() -> cor_matrix
 
-png(here::here(figdir, "corr_plot.png"), height = 500, width = 600)
+png(here::here(figdir, "corr_plot_revised.png"), height = 500, width = 600)
 cor_matrix %>% 
   corrplot::corrplot(type = "lower", diag = F, method = "square") 
 dev.off()
